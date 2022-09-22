@@ -5,11 +5,16 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import banco.ConnectionFactory;
+
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ImageIcon;
 import java.awt.Color;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
 import java.awt.Font;
 import javax.swing.JTabbedPane;
 import java.awt.Toolkit;
@@ -19,6 +24,11 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 @SuppressWarnings("serial")
 public class Buscar extends JFrame {
@@ -37,6 +47,7 @@ public class Buscar extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -93,6 +104,23 @@ public class Buscar extends JFrame {
 		modelo.addColumn("Data Check Out");
 		modelo.addColumn("Valor");
 		modelo.addColumn("Forma de Pago");
+		String numero = "Numero de Reserva";
+		String dataIn = "Data de entrada";
+		String dataOut = "Data de saída";
+		String valor = "Valor";
+		String pagamento = "Forma de Pagamento";
+		modelo.addRow(new Object[] {
+				numero,
+				dataIn,
+				dataOut,
+				valor,
+				pagamento
+		});
+		try {
+			pegaReservas();
+		} catch (Exception e1) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar a tabela de dados 'RESERVA'"+e1, "ERRO", JOptionPane.ERROR_MESSAGE, null);
+		}
 		
 		
 		tbHospedes = new JTable();
@@ -107,6 +135,26 @@ public class Buscar extends JFrame {
 		modeloHospedes.addColumn("Nacionalidade");
 		modeloHospedes.addColumn("Telefone");
 		modeloHospedes.addColumn("Numero de Reserva");
+		String numeroHospede = "Numero de Reserva";
+		String nome = "Data de entrada";
+		String sobrenome = "Data de saída";
+		String dataNascimento = "Valor";
+		String nacionalidade = "Forma de Pagamento";
+		String telefone = "Telefone";
+		modeloHospedes.addRow(new Object[] {
+				numeroHospede,
+				nome,
+				sobrenome,
+				dataNascimento,
+				nacionalidade,
+				telefone,
+				numero		
+		});
+		try {
+			pegaHospedes();
+		} catch (SQLException e2) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar a tabela de dados 'Hospedes'"+e2, "ERRO", JOptionPane.ERROR_MESSAGE, null);
+		}
 		
 		JLabel lblNewLabel_2 = new JLabel("");
 		lblNewLabel_2.setIcon(new ImageIcon(Buscar.class.getResource("/imagenes/Ha-100px.png")));
@@ -260,4 +308,49 @@ public class Buscar extends JFrame {
 	        int y = evt.getYOnScreen();
 	        this.setLocation(x - xMouse, y - yMouse);
 }
-}
+	    private void pegaReservas() throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+			
+			
+			Statement stm = conexao.createStatement();
+			stm.execute("SELECT * FROM Reservas");
+			
+			ResultSet rst = stm.getResultSet();
+			
+			while(rst.next()) {
+					modelo.addRow(new Object[] {
+				    rst.getString("Id"),
+					rst.getString("DataEntrada"),
+					rst.getString("DataSaida"),
+					rst.getString("Valor"),
+					rst.getString("FormaPagamento")
+				});
+			}
+	    }
+	    private void pegaHospedes() throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+			
+			
+			Statement stm = conexao.createStatement();
+			stm.execute("SELECT * FROM Hospedes");
+			
+			ResultSet rst = stm.getResultSet();
+			
+			while(rst.next()) {
+					modeloHospedes.addRow(new Object[] {
+							rst.getInt("Id"),
+							rst.getString("Nome"),
+							rst.getString("Sobrenome"),
+							rst.getString("DataNascimento"),
+							rst.getString("Nacionalidade"),
+							rst.getString("Telefone"),
+							rst.getString("IdReserva")
+				});
+			}
+	    }
+		}
+
+
+	
