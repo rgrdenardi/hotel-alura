@@ -1,6 +1,9 @@
 package views;
 
 import java.awt.EventQueue;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -289,14 +292,22 @@ public class Buscar extends JFrame {
 		contentPane.add(btnDeletar);
 		
 		JLabel lblExcluir = new JLabel("DELETAR");
+		lblExcluir.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				deletaHospedes();
+				deletaReservas();
+			}
+		});
 		lblExcluir.setHorizontalAlignment(SwingConstants.CENTER);
 		lblExcluir.setForeground(Color.WHITE);
 		lblExcluir.setFont(new Font("Roboto", Font.PLAIN, 18));
 		lblExcluir.setBounds(0, 0, 122, 35);
 		btnDeletar.add(lblExcluir);
 		setResizable(false);
+		
+		
 	}
-	
 	//Código que permite movimentar a janela pela tela seguindo a posição de "x" e "y"	
 	 private void headerMousePressed(java.awt.event.MouseEvent evt) {
 	        xMouse = evt.getX();
@@ -350,6 +361,18 @@ public class Buscar extends JFrame {
 				});
 			}
 	    }
+	    private void deletaHospedes( ) {
+	    	if (tbHospedes.hasFocus()) {
+	    	modeloHospedes.removeRow(tbHospedes.getSelectedRow());
+	    	}
+	    }
+	    private void deletaReservas( ) {
+	    
+			if (tbReservas.hasFocus()) {
+				modelo.removeRow(tbReservas.getSelectedRow());
+			}
+	    }
+	    
 		}
 
 
