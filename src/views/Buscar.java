@@ -1,9 +1,6 @@
 package views;
 
 import java.awt.EventQueue;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -138,11 +135,11 @@ public class Buscar extends JFrame {
 		modeloHospedes.addColumn("Nacionalidade");
 		modeloHospedes.addColumn("Telefone");
 		modeloHospedes.addColumn("Numero de Reserva");
-		String numeroHospede = "Numero de Reserva";
-		String nome = "Data de entrada";
-		String sobrenome = "Data de saída";
-		String dataNascimento = "Valor";
-		String nacionalidade = "Forma de Pagamento";
+		String numeroHospede = "Id";
+		String nome = "Nome";
+		String sobrenome = "Sobrenome";
+		String dataNascimento = "DataNascimento";
+		String nacionalidade = "Nacionalidade";
 		String telefone = "Telefone";
 		modeloHospedes.addRow(new Object[] {
 				numeroHospede,
@@ -151,7 +148,7 @@ public class Buscar extends JFrame {
 				dataNascimento,
 				nacionalidade,
 				telefone,
-				numero		
+				numero	
 		});
 		try {
 			pegaHospedes();
@@ -295,8 +292,14 @@ public class Buscar extends JFrame {
 		lblExcluir.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				deletaHospedes();
-				deletaReservas();
+				try {
+					deletaHospedes();
+					deletaReservas();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					System.out.println("deu ruim aqui");				
+					}
+
 			}
 		});
 		lblExcluir.setHorizontalAlignment(SwingConstants.CENTER);
@@ -338,6 +341,8 @@ public class Buscar extends JFrame {
 					rst.getString("FormaPagamento")
 				});
 			}
+			conexao.close();
+			stm.close();
 	    }
 	    private void pegaHospedes() throws SQLException {
 	    	ConnectionFactory factory = new ConnectionFactory();
@@ -360,20 +365,55 @@ public class Buscar extends JFrame {
 							rst.getString("IdReserva")
 				});
 			}
+			conexao.close();
+			stm.close();
 	    }
-	    private void deletaHospedes( ) {
-	    	if (tbHospedes.hasFocus()) {
-	    	modeloHospedes.removeRow(tbHospedes.getSelectedRow());
+	    private void deletaReservas() {
+	    
+			try {
+	    	if (tbReservas.hasFocus()) {
+				ConnectionFactory factory = new ConnectionFactory();
+				Connection conexao = factory.recuperarConexao();
+				int reservaSelecionada = tbReservas.getSelectedRow();
+		    	String idReservas = tbReservas.getValueAt(reservaSelecionada, 0).toString();
+		    	modelo.removeRow(reservaSelecionada);
+		    	String sql = "delete from Reservas where Id=?";
+				PreparedStatement pst2 = conexao.prepareStatement(sql);
+				pst2.setString(1, idReservas);
+				pst2.execute();
+				conexao.close();
+				pst2.close();
+		    	}
+	    	} catch (Exception e) {
+	    		System.out.println("Ocorreu um erro ao exluir a tabela do banco");
+	    		e.printStackTrace();
+	    		JOptionPane.showMessageDialog(null, e);
 	    	}
-	    }
-	    private void deletaReservas( ) {
+			}	
 	    
-			if (tbReservas.hasFocus()) {
-				modelo.removeRow(tbReservas.getSelectedRow());
-			}
-	    }
-	    
+	    private void deletaHospedes() {
+	    	
+	    	try {
+	    	
+			if (tbHospedes.hasFocus()) {
+				ConnectionFactory factory = new ConnectionFactory();
+				Connection conexao = factory.recuperarConexao();
+				int hospedeSelecionado = tbHospedes.getSelectedRow();
+		    	String idSelecionado = tbHospedes.getValueAt(hospedeSelecionado, 0).toString();
+		    	modeloHospedes.removeRow(hospedeSelecionado);
+				String sql = "delete from Hospedes where id=?";
+				PreparedStatement pst = conexao.prepareStatement(sql);
+				pst.setString(1, idSelecionado);
+				pst.execute();
+				conexao.close();
+				pst.close();
+		    	}
+	    	} catch (Exception e) {
+	    		System.out.println("Ocorreu um erro ao exluir a tabela do banco");
+	    		JOptionPane.showMessageDialog(null, e);
+	    	}
+			
+	    }	   
 		}
 
 
-	
