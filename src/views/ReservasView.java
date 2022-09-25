@@ -11,15 +11,23 @@ import javax.swing.ImageIcon;
 import java.awt.Color;
 import javax.swing.JTextField;
 import com.toedter.calendar.JDateChooser;
+
+import banco.ConnectionFactory;
+
 import java.awt.Font;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.Toolkit;
 import java.beans.PropertyChangeListener;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.beans.PropertyChangeEvent;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
@@ -28,6 +36,7 @@ import javax.swing.border.LineBorder;
 
 @SuppressWarnings("serial")
 public class ReservasView extends JFrame {
+	
 
 	private JPanel contentPane;
 	public static JTextField txtValor;
@@ -114,7 +123,7 @@ public class ReservasView extends JFrame {
 		
 		lblValorSimbolo = new JLabel("$");
 		lblValorSimbolo.setVisible(false);
-		lblValorSimbolo.setBounds(121, 332, 17, 25);
+		lblValorSimbolo.setBounds(124, 332, 17, 25);
 		lblValorSimbolo.setForeground(SystemColor.textHighlight);
 		lblValorSimbolo.setFont(new Font("Roboto", Font.BOLD, 17));
 		
@@ -152,11 +161,11 @@ public class ReservasView extends JFrame {
 	
 		
 		txtValor = new JTextField();
+		txtValor.setText("?");
 		txtValor.setBackground(SystemColor.text);
 		txtValor.setHorizontalAlignment(SwingConstants.CENTER);
 		txtValor.setForeground(Color.BLACK);
-		txtValor.setBounds(78, 328, 43, 33);
-		txtValor.setEditable(false);
+		txtValor.setBounds(78, 328, 42, 33);
 		txtValor.setFont(new Font("Roboto Black", Font.BOLD, 17));
 		txtValor.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 		panel.add(txtValor);
@@ -310,6 +319,16 @@ public class ReservasView extends JFrame {
 		btnProximo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 		
 		JLabel lblSeguinte = new JLabel("PRÓXIMO");
+		// CLICK NO BOTAO PROXIMO
+		lblSeguinte.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				insereReserva();
+				panel.setVisible(false);
+				RegistroHospede regHospede = new RegistroHospede();
+				regHospede.setVisible(true);
+			}
+		});
 		lblSeguinte.setHorizontalAlignment(SwingConstants.CENTER);
 		lblSeguinte.setForeground(Color.WHITE);
 		lblSeguinte.setFont(new Font("Roboto", Font.PLAIN, 18));
@@ -317,6 +336,32 @@ public class ReservasView extends JFrame {
 		btnProximo.add(lblSeguinte);
 	}
 
+	private void insereReserva() {
+		ConnectionFactory connectionFactory = new ConnectionFactory();
+		try {
+			Connection conexao = connectionFactory.recuperarConexao();
+			java.util.Date dataEntrada = txtDataE.getDate();
+			SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
+			String entradaFormatada = formato.format(dataEntrada);
+			java.util.Date dataSaida = txtDataS.getDate();
+			String saidaFormatada = formato.format(dataSaida);
+			String valor = txtValor.getText();
+			String formaPagamento = (String)txtFormaPagamento.getSelectedItem();
+			String sql = "insert into reservas (dataEntrada, dataSaida, Valor, FormaPagamento) values (?, ?, ?, ?)";
+			PreparedStatement pst = conexao.prepareStatement(sql);
+			pst.setString(1, entradaFormatada);
+			pst.setString(2, saidaFormatada);
+			pst.setString(3, valor);
+			pst.setString(4, formaPagamento);
+			pst.execute();
+			conexao.close();
+			pst.close();
+		} catch (SQLException e) {
+			System.out.println("deu ruim");
+			e.printStackTrace();
+		}
+		
+	}
 	//Código que permite movimentar a janela pela tela seguindo a posição de "x" e "y"	
 	 private void headerMousePressed(java.awt.event.MouseEvent evt) {
 	        xMouse = evt.getX();
