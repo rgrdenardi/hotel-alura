@@ -14,8 +14,6 @@
 #### 🔹 Permite editar ou excluir esses dados através de botões na interface
 #### 🔹 Sistema de busca baseado tanto em sobrenome do hóspede ou no número da reserva
 #### 🔹 O valor da reserva é gerado de acordo com a diferença de dias entre a entrada e saída do hospede somados a um valor de 100 reais fixos
-
-#### 🔹
 </br>
 
 ## 🖥️ Tecnologias Utilizadas:
