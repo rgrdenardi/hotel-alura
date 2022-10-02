@@ -47,7 +47,7 @@ public class Sucesso extends JDialog {
 		setLocationRelativeTo(null);
 		contentPanel.setLayout(null);
 		{
-			JLabel lblNewLabel = new JLabel("");
+			JLabel lblNewLabel = new JLabel("rola");
 			lblNewLabel.setIcon(new ImageIcon(Sucesso.class.getResource("/imagenes/Ha-100px.png")));
 			lblNewLabel.setBounds(123, 11, 100, 100);
 			contentPanel.add(lblNewLabel);

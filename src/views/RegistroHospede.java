@@ -1,13 +1,17 @@
 package views;
 
 import java.awt.EventQueue;
+import views.ReservasView;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JTextField;
 import java.awt.Color;
 import com.toedter.calendar.JDateChooser;
+import banco.ConnectionFactory;
+import views.ReservasView;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,7 +23,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Random;
 import java.awt.event.ActionEvent;
 import java.awt.Toolkit;
 import javax.swing.SwingConstants;
@@ -38,7 +49,8 @@ public class RegistroHospede extends JFrame {
 	private JLabel labelExit;
 	private JLabel labelAtras;
 	int xMouse, yMouse;
-
+	static Random random = new Random();
+	public static int idReserva = random.nextInt(1000);
 	/**
 	 * Launch the application.
 	 */
@@ -236,12 +248,15 @@ public class RegistroHospede extends JFrame {
 		contentPane.add(lblNumeroReserva);
 		
 		txtNreserva = new JTextField();
+		txtNreserva.setEditable(false);
 		txtNreserva.setFont(new Font("Roboto", Font.PLAIN, 16));
 		txtNreserva.setBounds(560, 495, 285, 33);
 		txtNreserva.setColumns(10);
 		txtNreserva.setBackground(Color.WHITE);
 		txtNreserva.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 		contentPane.add(txtNreserva);
+		String nReserva = Integer.toString(idReserva);
+		txtNreserva.setText(nReserva);
 		
 		JSeparator separator_1_2 = new JSeparator();
 		separator_1_2.setBounds(560, 170, 289, 2);
@@ -292,6 +307,21 @@ public class RegistroHospede extends JFrame {
 		btnsalvar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 		
 		JLabel labelSalvar = new JLabel("SALVAR");
+		labelSalvar.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				insereHospede(idReserva);
+				idReserva = random.nextInt(1000);
+				dispose();
+				try {
+					Sucesso dialog = new Sucesso();
+					dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					dialog.setVisible(true);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
 		labelSalvar.setHorizontalAlignment(SwingConstants.CENTER);
 		labelSalvar.setForeground(Color.WHITE);
 		labelSalvar.setFont(new Font("Roboto", Font.PLAIN, 18));
@@ -313,7 +343,39 @@ public class RegistroHospede extends JFrame {
 		logo.setBounds(194, 39, 104, 107);
 		panel.add(logo);
 		logo.setIcon(new ImageIcon(RegistroHospede.class.getResource("/imagenes/Ha-100px.png")));
+		
+		
 	}
+	
+	public void insereHospede(int idReserva){
+		ConnectionFactory connectionFactory = new ConnectionFactory();
+		try {
+			Connection conexao = connectionFactory.recuperarConexao();
+			java.util.Date dataNascimento = txtDataN.getDate();
+			SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
+			String nascimentoFormatado = formato.format(dataNascimento);
+			String nome = txtNome.getText();
+			String sobrenome = txtSobrenome.getText();
+			String nacionalidade = (String)txtNacionalidade.getSelectedItem();
+			String telefone = txtTelefone.getText();
+			String sql = "insert into Hospedes (Nome, Sobrenome, DataNascimento, Nacionalidade, Telefone, IdReserva) values (?, ?, ?, ?, ?, ?)";
+			PreparedStatement pst = conexao.prepareStatement(sql);
+			pst.setString(1, nome);
+			pst.setString(2, sobrenome);
+			pst.setString(3, nascimentoFormatado);
+			pst.setString(4, nacionalidade);
+			pst.setString(5, telefone);
+			pst.setInt(6, idReserva);
+			pst.execute();
+			conexao.close();
+			pst.close();
+		} catch (SQLException e) {
+			System.out.println("deu ruim");
+			e.printStackTrace();
+		}
+		
+	}
+
 	
 	//Código que permite movimentar a janela pela tela seguindo a posição de "x" y "y"
 	 private void headerMousePressed(java.awt.event.MouseEvent evt) {
@@ -326,5 +388,5 @@ public class RegistroHospede extends JFrame {
 	        int y = evt.getYOnScreen();
 	        this.setLocation(x - xMouse, y - yMouse);
 }
-											
+									
 }

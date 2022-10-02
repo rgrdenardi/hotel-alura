@@ -1,6 +1,7 @@
 package views;
 
 import java.awt.EventQueue;
+import views.RegistroHospede;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -11,7 +12,6 @@ import javax.swing.ImageIcon;
 import java.awt.Color;
 import javax.swing.JTextField;
 import com.toedter.calendar.JDateChooser;
-
 import banco.ConnectionFactory;
 
 import java.awt.Font;
@@ -19,6 +19,10 @@ import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
+import java.util.Random;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -27,11 +31,17 @@ import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.beans.PropertyChangeEvent;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
+
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.Period;
 
 
 @SuppressWarnings("serial")
@@ -47,7 +57,6 @@ public class ReservasView extends JFrame {
 	private JLabel labelExit;
 	private JLabel lblValorSimbolo; 
 	private JLabel labelAtras;
-
 	/**
 	 * Launch the application.
 	 */
@@ -151,6 +160,8 @@ public class ReservasView extends JFrame {
 		txtDataS.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				//Ativa o evento, após o usuário selecionar as datas, o valor da reserva deve ser calculado
+				valor();
+
 			}
 		});
 		txtDataS.setDateFormatString("yyyy-MM-dd");
@@ -161,7 +172,7 @@ public class ReservasView extends JFrame {
 	
 		
 		txtValor = new JTextField();
-		txtValor.setText("?");
+		txtValor.setEditable(false);
 		txtValor.setBackground(SystemColor.text);
 		txtValor.setHorizontalAlignment(SwingConstants.CENTER);
 		txtValor.setForeground(Color.BLACK);
@@ -323,12 +334,10 @@ public class ReservasView extends JFrame {
 		lblSeguinte.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				insereReserva();
-				panel.setVisible(false);
-				RegistroHospede regHospede = new RegistroHospede();
-				regHospede.setVisible(true);
+				criaId();
 			}
 		});
+		
 		lblSeguinte.setHorizontalAlignment(SwingConstants.CENTER);
 		lblSeguinte.setForeground(Color.WHITE);
 		lblSeguinte.setFont(new Font("Roboto", Font.PLAIN, 18));
@@ -336,7 +345,7 @@ public class ReservasView extends JFrame {
 		btnProximo.add(lblSeguinte);
 	}
 
-	private void insereReserva() {
+	public void insereReserva(int idReserva) {
 		ConnectionFactory connectionFactory = new ConnectionFactory();
 		try {
 			Connection conexao = connectionFactory.recuperarConexao();
@@ -345,14 +354,15 @@ public class ReservasView extends JFrame {
 			String entradaFormatada = formato.format(dataEntrada);
 			java.util.Date dataSaida = txtDataS.getDate();
 			String saidaFormatada = formato.format(dataSaida);
-			String valor = txtValor.getText();
 			String formaPagamento = (String)txtFormaPagamento.getSelectedItem();
-			String sql = "insert into reservas (dataEntrada, dataSaida, Valor, FormaPagamento) values (?, ?, ?, ?)";
+			String valor = txtValor.getText();
+			String sql = "insert into reservas (Id, dataEntrada, dataSaida, Valor, FormaPagamento) values (?, ?, ?, ?, ?)";
 			PreparedStatement pst = conexao.prepareStatement(sql);
-			pst.setString(1, entradaFormatada);
-			pst.setString(2, saidaFormatada);
-			pst.setString(3, valor);
-			pst.setString(4, formaPagamento);
+			pst.setInt(1, idReserva);
+			pst.setString(2, entradaFormatada);
+			pst.setString(3, saidaFormatada);
+			pst.setString(4, valor);
+			pst.setString(5, formaPagamento);
 			pst.execute();
 			conexao.close();
 			pst.close();
@@ -362,6 +372,31 @@ public class ReservasView extends JFrame {
 		}
 		
 	}
+	
+	public void criaId() {
+		RegistroHospede regHospede = new RegistroHospede();		
+		int idReserva = RegistroHospede.idReserva;
+		insereReserva(idReserva);
+		dispose();
+		regHospede.setVisible(true);
+	}
+	
+	public void valor() {
+		java.util.Date dataEntrada = txtDataE.getDate();		
+		java.util.Date dataSaida = txtDataS.getDate();	
+		DateTime dE = new DateTime(dataEntrada);
+		DateTime dS = new DateTime(dataSaida);
+		Duration dias = new Duration(dE, dS);
+		long diferencaDias = dias.getStandardDays();	
+		long diaria = (diferencaDias * 80) + 100;
+		String valor = Long.toString(diaria);
+		if (dataEntrada != null && dataSaida != null) {
+			txtValor.setText(valor);
+		}
+	}
+
+	
+	
 	//Código que permite movimentar a janela pela tela seguindo a posição de "x" e "y"	
 	 private void headerMousePressed(java.awt.event.MouseEvent evt) {
 	        xMouse = evt.getX();

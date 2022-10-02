@@ -124,6 +124,7 @@ public class Buscar extends JFrame {
 		
 		
 		tbHospedes = new JTable();
+		
 		tbHospedes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tbHospedes.setFont(new Font("Roboto", Font.PLAIN, 16));
 		panel.addTab("Hóspedes", new ImageIcon(Buscar.class.getResource("/imagenes/pessoas.png")), tbHospedes, null);
@@ -261,30 +262,47 @@ public class Buscar extends JFrame {
 		contentPane.add(btnbuscar);
 		
 		JLabel lblBuscar = new JLabel("BUSCAR");
+		lblBuscar.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					boolean eSobrenome = false;
+					String txt = txtBuscar.getText();
+					if (!"".equals(txt)) {
+						modelo.setNumRows(0);
+						modeloHospedes.setNumRows(0);
+						eSobrenome = buscaSobrenome(txt);
+						if (eSobrenome != true) {
+							buscaHospedes(txt);
+							Integer txtBuscar = Integer.parseInt(txt);
+							buscaReservas(txtBuscar);
+						}
+					} else {
+						modelo.setNumRows(0);
+						modeloHospedes.setNumRows(0);
+						pegaReservas();
+						pegaHospedes();
+					}
+					
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, e);
+				}
+			}
+		});
 		lblBuscar.setBounds(0, 0, 122, 35);
 		btnbuscar.add(lblBuscar);
 		lblBuscar.setHorizontalAlignment(SwingConstants.CENTER);
 		lblBuscar.setForeground(Color.WHITE);
 		lblBuscar.setFont(new Font("Roboto", Font.PLAIN, 18));
 		
-		JPanel btnEditar = new JPanel();
-		btnEditar.setLayout(null);
-		btnEditar.setBackground(new Color(12, 138, 199));
-		btnEditar.setBounds(635, 508, 122, 35);
-		btnEditar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-		contentPane.add(btnEditar);
 		
-		JLabel lblEditar = new JLabel("EDITAR");
-		lblEditar.setHorizontalAlignment(SwingConstants.CENTER);
-		lblEditar.setForeground(Color.WHITE);
-		lblEditar.setFont(new Font("Roboto", Font.PLAIN, 18));
-		lblEditar.setBounds(0, 0, 122, 35);
-		btnEditar.add(lblEditar);
 		
 		JPanel btnDeletar = new JPanel();
 		btnDeletar.setLayout(null);
 		btnDeletar.setBackground(new Color(12, 138, 199));
-		btnDeletar.setBounds(767, 508, 122, 35);
+		btnDeletar.setBounds(350, 508, 200, 35);
 		btnDeletar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 		contentPane.add(btnDeletar);
 		
@@ -297,7 +315,7 @@ public class Buscar extends JFrame {
 					deletaReservas();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					System.out.println("deu ruim aqui");				
+					JOptionPane.showMessageDialog(null, e);				
 					}
 
 			}
@@ -305,7 +323,7 @@ public class Buscar extends JFrame {
 		lblExcluir.setHorizontalAlignment(SwingConstants.CENTER);
 		lblExcluir.setForeground(Color.WHITE);
 		lblExcluir.setFont(new Font("Roboto", Font.PLAIN, 18));
-		lblExcluir.setBounds(0, 0, 122, 35);
+		lblExcluir.setBounds(0, 0, 200, 35);
 		btnDeletar.add(lblExcluir);
 		setResizable(false);
 		
@@ -344,6 +362,108 @@ public class Buscar extends JFrame {
 			conexao.close();
 			stm.close();
 	    }
+	    
+	    private void buscaReservas(int id) throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+			
+			
+			PreparedStatement stm = conexao.prepareStatement("SELECT * FROM Reservas where id=?");
+			stm.setInt(1, id);
+			ResultSet rst = stm.executeQuery();
+		
+			
+			while(rst.next()) {
+					
+					modelo.addRow(new Object[] {
+				    rst.getInt("Id"),
+					rst.getString("DataEntrada"),
+					rst.getString("DataSaida"),
+					rst.getString("Valor"),
+					rst.getString("FormaPagamento")
+				});
+			}
+			conexao.close();
+			stm.close();
+	    }
+	    
+	    private void buscaHospedes(String id) throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+			
+			
+			PreparedStatement stm = conexao.prepareStatement("SELECT * FROM Hospedes where idReserva=?");
+			stm.setString(1, id);
+			ResultSet rst = stm.executeQuery();
+		
+			
+			while(rst.next()) {
+					
+					modeloHospedes.addRow(new Object[] {
+							rst.getInt("Id"),
+							rst.getString("Nome"),
+							rst.getString("Sobrenome"),
+							rst.getString("DataNascimento"),
+							rst.getString("Nacionalidade"),
+							rst.getString("Telefone"),
+							rst.getString("IdReserva")
+				});
+			}
+			conexao.close();
+			stm.close();
+	    }
+	    
+	    public boolean buscaSobrenome (String sobrenome) throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+			String id;
+			boolean eSobrenome = false;
+			
+			PreparedStatement stm = conexao.prepareStatement("SELECT * FROM Hospedes where sobrenome=?");
+			stm.setString(1, sobrenome);
+			ResultSet rst = stm.executeQuery();
+					
+			while(rst.next()) {
+					
+					modeloHospedes.addRow(new Object[] {
+							rst.getInt("Id"),
+							rst.getString("Nome"),
+							rst.getString("Sobrenome"),
+							rst.getString("DataNascimento"),
+							rst.getString("Nacionalidade"),
+							rst.getString("Telefone"),
+							id = rst.getString("IdReserva")
+							
+				});
+					Integer idReserva = Integer.parseInt(id);
+					sobrenomeToReserva(idReserva);
+					eSobrenome = true;
+			}
+			
+			
+			
+			conexao.close();
+			stm.close();
+			
+			return eSobrenome;
+	    }
+	    
+	    private void sobrenomeToReserva(int id) throws SQLException {
+	    	ConnectionFactory factory = new ConnectionFactory();
+			Connection conexao = factory.recuperarConexao();
+	    	PreparedStatement stm2 = conexao.prepareStatement("SELECT * FROM Reservas where id=?");
+			stm2.setInt(1, id);
+			ResultSet rst2 = stm2.executeQuery();
+			while ( rst2.next()){
+				modelo.addRow(new Object[] {
+			    rst2.getInt("Id"),
+				rst2.getString("DataEntrada"),
+				rst2.getString("DataSaida"),
+				rst2.getString("Valor"),
+				rst2.getString("FormaPagamento")
+			});
+		}
+	    }
 	    private void pegaHospedes() throws SQLException {
 	    	ConnectionFactory factory = new ConnectionFactory();
 			Connection conexao = factory.recuperarConexao();
@@ -368,6 +488,7 @@ public class Buscar extends JFrame {
 			conexao.close();
 			stm.close();
 	    }
+	   
 	    private void deletaReservas() {
 	    
 			try {
@@ -378,11 +499,17 @@ public class Buscar extends JFrame {
 		    	String idReservas = tbReservas.getValueAt(reservaSelecionada, 0).toString();
 		    	modelo.removeRow(reservaSelecionada);
 		    	String sql = "delete from Reservas where Id=?";
+		    	String sql2 = "delete from Hospedes where IdReserva=?";
 				PreparedStatement pst2 = conexao.prepareStatement(sql);
+				PreparedStatement pst3 = conexao.prepareStatement(sql2);
 				pst2.setString(1, idReservas);
+				pst3.setString(1, idReservas);
 				pst2.execute();
+				pst3.execute();
+				pegaHospedes();
 				conexao.close();
 				pst2.close();
+				pst3.close();
 		    	}
 	    	} catch (Exception e) {
 	    		System.out.println("Ocorreu um erro ao exluir a tabela do banco");
@@ -400,13 +527,20 @@ public class Buscar extends JFrame {
 				Connection conexao = factory.recuperarConexao();
 				int hospedeSelecionado = tbHospedes.getSelectedRow();
 		    	String idSelecionado = tbHospedes.getValueAt(hospedeSelecionado, 0).toString();
+		    	String idReserva = tbHospedes.getValueAt(hospedeSelecionado, 6).toString();
 		    	modeloHospedes.removeRow(hospedeSelecionado);
 				String sql = "delete from Hospedes where id=?";
+				String sql2 = "delete from Reservas where Id=?";
+				PreparedStatement pst2 = conexao.prepareStatement(sql2);
 				PreparedStatement pst = conexao.prepareStatement(sql);
 				pst.setString(1, idSelecionado);
+				pst2.setString(1, idReserva);
+				pst2.execute();
 				pst.execute();
+				pegaReservas();
 				conexao.close();
 				pst.close();
+				pst2.close();
 		    	}
 	    	} catch (Exception e) {
 	    		System.out.println("Ocorreu um erro ao exluir a tabela do banco");
